@@ -50,29 +50,75 @@ gltfLoader.load('enterprise.glb', (gltf) => {
   // Add the loaded model to the scene
   scene.add(loadedModel);
   renderer.render(scene, camera);
+  updatePosition(0);
 
-  // animate(); // Start the animation loop
+  var noScroll = true;
+
+// Assuming you have a canvas element with the id "yourCanvas"
+const canvas = document.getElementById("bg");
+
+document.addEventListener('click', () => {
+    if (noScroll) {
+        noScroll = false;
+        clock.start();
+        animate();
+    }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Your Three.js setup code here, including the definition of the animate() function
-    
-    // Add a scroll event listener to the window
-    window.addEventListener('scroll', () => {
-      clock.start();
-        animate(); // Call the animate() function when the user scrolls
-    });
+  // animate(); // Start the animation loop
 });
 
 console.log(window.innerWidth);
 
 // Define the control points for the quadratic Bezier curve
-const startPoint = new THREE.Vector3(0, 0, 0);
-const controlPoint1 = new THREE.Vector3(50, 10, -10);
-const endPoint = new THREE.Vector3(200, 30, -40);
+// const startPoint = new THREE.Vector3(0, 0, 0);
+// const controlPoint1 = new THREE.Vector3(50, 10, -10);
+// const endPoint = new THREE.Vector3(200, 30, -40);
+
+
+
+// Define your Bezier curve parameters
+// const curve1 = new THREE.CubicBezierCurve3(
+//     new THREE.Vector3(0, 0, 50),
+//     new THREE.Vector3(0, 20, 20),
+//     new THREE.Vector3(0, 50, 0),
+//     new THREE.Vector3(0, 50, 0)
+// );
+
+// const curve2 = new THREE.CubicBezierCurve3(
+//     new THREE.Vector3(0, 50, 0),
+//     new THREE.Vector3(0, 70, -10),
+//     new THREE.Vector3(200, 100, -50),
+//     new THREE.Vector3(200, 100, -50)
+// );
+
+const curve1 = new THREE.CubicBezierCurve3(
+  new THREE.Vector3(0, 0, 0),   // Start point
+  new THREE.Vector3(0, 5, 0),   // Control point 1 (vertical movement)
+  new THREE.Vector3(0, 10, 0),  // Control point 2 (vertical movement)
+  new THREE.Vector3(0, 15, 0)   // End point (higher up)
+);
+
+// Control points for the second Bezier curve (horizontal movement)
+const curve2 = new THREE.CubicBezierCurve3(
+  new THREE.Vector3(0, 15, 0),  // Start point (end of the first curve)
+  new THREE.Vector3(0, 20, 5),  // Control point 1 (horizontal movement)
+  new THREE.Vector3(0, 25, 5), // Control point 2 (horizontal movement)
+  new THREE.Vector3(0, 30, 0)  // End point (further to the right)
+);
+
+// Create a CurvePath and add your curves to it
+const curve = new THREE.CurvePath();
+curve.add(curve1);
+curve.add(curve2);
+
+// Now, you can use this curvePath for various purposes in Three.js
+
+// Now, you can use this path in your animation or other Three.js elements
+
 
 // Create a quadratic Bezier curve
-const curve = new THREE.QuadraticBezierCurve3(startPoint, controlPoint1, endPoint);
+// const curve = new THREE.QuadraticBezierCurve3(startPoint, controlPoint1, endPoint);
 
 // Number of points on the curve
 const numPoints = 100;
@@ -80,40 +126,52 @@ const points = curve.getPoints(numPoints);
 
 
 // Display the curve
-// const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-// const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
-// const line = new THREE.Line(lineGeometry, lineMaterial);
-// scene.add(line);
+const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+const line = new THREE.Line(lineGeometry, lineMaterial);
+scene.add(line);
 
 // Animation loop
 const clock = new THREE.Clock();
-const duration = 3; // Duration of the animation in seconds
+const duration = 8; // Duration of the animation in seconds
 const speed = 1;    // Adjust the speed of the animation
+
+function updatePosition(prog){
+  const position = new THREE.Vector3();
+  curve.getPointAt(prog, position);
+
+  const tangent = curve.getTangentAt(prog);
+  console.log(tangent);
+
+  // Set the object's rotation to align with the tangent
+  const rotation = new THREE.Euler().setFromVector3(tangent);
+  // rotation.z = Math.PI;
+  // rotation.y += Math.PI/2;
+  // rotation.z += Math.PI/2;
+
+  // rotation.y = Math.PI / 2;
+  // rotation.z = Math.PI;
+  // rotation.x = Math.PI;
+
+  // Update the model's position
+  loadedModel.position.copy(position);
+  loadedModel.rotation.copy(rotation);
+
+  renderer.render(scene, camera);
+}
+
+
 
 function animate() {
   const elapsed = clock.getElapsedTime();
   const progress = (elapsed * speed) / duration;
 
   // Get the position on the curve
-  const position = new THREE.Vector3();
-  curve.getPointAt(progress, position);
-
-
-
-
-  const tangent = curve.getTangentAt(progress);
-
-  // Set the object's rotation to align with the tangent
-const rotation = new THREE.Euler().setFromVector3(tangent);
-rotation.x += Math.PI/2;
-
-  // Update the model's position
-loadedModel.rotation.copy(rotation);
-loadedModel.position.copy(position);
-
+  updatePosition(progress);
+  console.log(progress);
 
   // Render the scene
-  renderer.render(scene, camera);
+  
 
   // Continue the animation
   if (progress < 1) {
