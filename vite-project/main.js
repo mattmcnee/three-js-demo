@@ -1,4 +1,4 @@
-import './style.css'
+import './style.css';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
@@ -19,17 +19,19 @@ pointLight.position.set(5, 5, 5);
 const ambientLight = new THREE.AmbientLight(0xffffff);
 scene.add(pointLight, ambientLight);
 
-// Create a red cube
-const cubeGeometry = new THREE.BoxGeometry(); // Default cube geometry
-const redMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red material
-const redCube = new THREE.Mesh(cubeGeometry, redMaterial);
+// Load the GLB model
+const gltfLoader = new GLTFLoader();
+gltfLoader.load('enterprise.glb', (gltf) => {
+  // The model has been loaded, and you can access it here
+  const loadedModel = gltf.scene;
 
-// Set the position of the red cube
-redCube.position.set(0, 0, 0); // Adjust the position as needed
-redCube.scale.set(2, 2, 2);
+  // Optionally, you can scale, position, or manipulate the loaded model here
+  loadedModel.scale.set(.2, .2, .2);
+  loadedModel.rotation.x = Math.PI;
 
-// Add the red cube to the scene
-scene.add(redCube);
+  // Add the loaded model to the scene
+  scene.add(loadedModel);
 
-// Render the scene
-renderer.render(scene, camera);
+  // Render the scene
+  renderer.render(scene, camera);
+});
