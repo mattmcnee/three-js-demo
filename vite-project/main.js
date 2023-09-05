@@ -19,19 +19,34 @@ pointLight.position.set(5, 5, 5);
 const ambientLight = new THREE.AmbientLight(0xffffff);
 scene.add(pointLight, ambientLight);
 
+let loadedModel;
+
 // Load the GLB model
 const gltfLoader = new GLTFLoader();
 gltfLoader.load('enterprise.glb', (gltf) => {
   // The model has been loaded, and you can access it here
-  const loadedModel = gltf.scene;
+  loadedModel = gltf.scene;
 
   // Optionally, you can scale, position, or manipulate the loaded model here
-  loadedModel.scale.set(.2, .2, .2);
+  loadedModel.scale.set(1, 1, 1);
   loadedModel.rotation.x = Math.PI;
 
   // Add the loaded model to the scene
   scene.add(loadedModel);
 
+  animate(); // Start the animation loop
+});
+
+// Function to animate the rotation
+function animate() {
+  requestAnimationFrame(animate);
+
+  // Rotate the model around the Z direction
+  if (loadedModel) {
+    loadedModel.rotation.y += 0.005; // Adjust the rotation speed as needed
+  }
+
   // Render the scene
   renderer.render(scene, camera);
-});
+}
+
