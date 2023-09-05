@@ -11,7 +11,7 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 camera.position.setZ(80);
-camera.position.setX(-20);
+camera.position.setY(20);
 
 // Lights
 const pointLight = new THREE.PointLight(0x000000);
@@ -37,8 +37,6 @@ function addStar() {
 Array(300).fill().forEach(addStar);
 
 
-
-
 // Load the GLB model
 const gltfLoader = new GLTFLoader();
 gltfLoader.load('enterprise.glb', (gltf) => {
@@ -51,15 +49,27 @@ gltfLoader.load('enterprise.glb', (gltf) => {
 
   // Add the loaded model to the scene
   scene.add(loadedModel);
+  renderer.render(scene, camera);
 
-  animate(); // Start the animation loop
+  // animate(); // Start the animation loop
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+    // Your Three.js setup code here, including the definition of the animate() function
+    
+    // Add a scroll event listener to the window
+    window.addEventListener('scroll', () => {
+      clock.start();
+        animate(); // Call the animate() function when the user scrolls
+    });
+});
+
+console.log(window.innerWidth);
+
 // Define the control points for the quadratic Bezier curve
-const startPoint = new THREE.Vector3(-20, 0, 0);
-const controlPoint1 = new THREE.Vector3(-10, 20, 0);
-const controlPoint2 = new THREE.Vector3(10, 20, 0);
-const endPoint = new THREE.Vector3(20, 0, 0);
+const startPoint = new THREE.Vector3(0, 0, 0);
+const controlPoint1 = new THREE.Vector3(50, 10, -10);
+const endPoint = new THREE.Vector3(200, 30, -40);
 
 // Create a quadratic Bezier curve
 const curve = new THREE.QuadraticBezierCurve3(startPoint, controlPoint1, endPoint);
@@ -70,14 +80,14 @@ const points = curve.getPoints(numPoints);
 
 
 // Display the curve
-const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
-const line = new THREE.Line(lineGeometry, lineMaterial);
-scene.add(line);
+// const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+// const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+// const line = new THREE.Line(lineGeometry, lineMaterial);
+// scene.add(line);
 
 // Animation loop
 const clock = new THREE.Clock();
-const duration = 5; // Duration of the animation in seconds
+const duration = 3; // Duration of the animation in seconds
 const speed = 1;    // Adjust the speed of the animation
 
 function animate() {
@@ -88,8 +98,8 @@ function animate() {
   const position = new THREE.Vector3();
   curve.getPointAt(progress, position);
 
-  // Update the model's position
-  loadedModel.position.copy(position);
+
+
 
   const tangent = curve.getTangentAt(progress);
 
@@ -97,8 +107,10 @@ function animate() {
 const rotation = new THREE.Euler().setFromVector3(tangent);
 rotation.x += Math.PI/2;
 
-// Set the object's rotation
+  // Update the model's position
 loadedModel.rotation.copy(rotation);
+loadedModel.position.copy(position);
+
 
   // Render the scene
   renderer.render(scene, camera);
@@ -107,4 +119,8 @@ loadedModel.rotation.copy(rotation);
   if (progress < 1) {
     requestAnimationFrame(animate);
   }
+  // else{
+  //   clock.start();
+  //   requestAnimationFrame(animate);
+  // }
 }
