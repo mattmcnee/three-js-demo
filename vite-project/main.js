@@ -68,6 +68,13 @@ const curve = new THREE.QuadraticBezierCurve3(startPoint, controlPoint1, endPoin
 const numPoints = 100;
 const points = curve.getPoints(numPoints);
 
+
+// Display the curve
+const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+const line = new THREE.Line(lineGeometry, lineMaterial);
+scene.add(line);
+
 // Animation loop
 const clock = new THREE.Clock();
 const duration = 5; // Duration of the animation in seconds
