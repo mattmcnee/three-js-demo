@@ -14,7 +14,7 @@ camera.position.setZ(80);
 camera.position.setX(-20);
 
 // Lights
-const pointLight = new THREE.PointLight(0xffffff);
+const pointLight = new THREE.PointLight(0x000000);
 pointLight.position.set(5, 5, 5);
 const ambientLight = new THREE.AmbientLight(0xffffff);
 scene.add(pointLight, ambientLight);
@@ -23,16 +23,31 @@ let loadedModel;
 let angle = 0; // Initial angle for orbit
 const radius = 50; // Radius of the orbit
 
+
+function addStar() {
+  const geometry = new THREE.SphereGeometry(0.25, 24, 24);
+  const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+  const star = new THREE.Mesh(geometry, material);
+
+  const [x, y, z] = [THREE.MathUtils.randFloatSpread(800), THREE.MathUtils.randFloatSpread(600), THREE.MathUtils.randFloat(-60, -160)];
+
+  star.position.set(x, y, z);
+  scene.add(star);
+}
+Array(300).fill().forEach(addStar);
+
+
+
+
 // Load the GLB model
 const gltfLoader = new GLTFLoader();
 gltfLoader.load('enterprise.glb', (gltf) => {
-  // The model has been loaded, and you can access it here
   loadedModel = gltf.scene;
 
-  // Optionally, you can scale, position, or manipulate the loaded model here
   loadedModel.scale.set(1, 1, 1);
   loadedModel.rotation.x = Math.PI;
-  loadedModel.rotation.y = Math.PI / 2;
+  loadedModel.rotation.z = Math.PI / 2;
+  loadedModel.rotation.x = Math.PI / 2;
 
   // Add the loaded model to the scene
   scene.add(loadedModel);
@@ -40,24 +55,49 @@ gltfLoader.load('enterprise.glb', (gltf) => {
   animate(); // Start the animation loop
 });
 
-// Function to animate the rotation and orbit
+// Define the control points for the quadratic Bezier curve
+const startPoint = new THREE.Vector3(-20, 0, 0);
+const controlPoint1 = new THREE.Vector3(-10, 20, 0);
+const controlPoint2 = new THREE.Vector3(10, 20, 0);
+const endPoint = new THREE.Vector3(20, 0, 0);
+
+// Create a quadratic Bezier curve
+const curve = new THREE.QuadraticBezierCurve3(startPoint, controlPoint1, endPoint);
+
+// Number of points on the curve
+const numPoints = 100;
+const points = curve.getPoints(numPoints);
+
+// Animation loop
+const clock = new THREE.Clock();
+const duration = 5; // Duration of the animation in seconds
+const speed = 1;    // Adjust the speed of the animation
+
 function animate() {
-  requestAnimationFrame(animate);
+  const elapsed = clock.getElapsedTime();
+  const progress = (elapsed * speed) / duration;
 
-  // Update the position to create an orbit
-  if (loadedModel) {
-    angle += 0.005; // Adjust the orbit speed as needed
-    const x = radius * Math.cos(angle);
-    const z = radius * Math.sin(angle);
+  // Get the position on the curve
+  const position = new THREE.Vector3();
+  curve.getPointAt(progress, position);
 
-    loadedModel.position.set(x, 0, z);
-  }
+  // Update the model's position
+  loadedModel.position.copy(position);
 
-  // Rotate the model around its own axis
-  if (loadedModel) {
-    loadedModel.rotation.y += 0.005; // Adjust the rotation speed as needed
-  }
+  const tangent = curve.getTangentAt(progress);
+
+  // Set the object's rotation to align with the tangent
+const rotation = new THREE.Euler().setFromVector3(tangent);
+rotation.x += Math.PI/2;
+
+// Set the object's rotation
+loadedModel.rotation.copy(rotation);
 
   // Render the scene
   renderer.render(scene, camera);
+
+  // Continue the animation
+  if (progress < 1) {
+    requestAnimationFrame(animate);
+  }
 }
