@@ -95,18 +95,20 @@ nav {
     font-size: 1.25rem;
     line-height: 1.5;
     margin-bottom: var(--spacing);
+    border-radius: 10px;
   }
 
   blockquote {
     margin: 0;
-    padding: 0;
+    padding: 10px;
     grid-column: 2 / span 9;
     margin-bottom: var(--spacing);
+        background-color: var(--dark-bg);
+        border-radius: 10px;
   }
 
   blockquote p {
-    color: transparent;
-    background-color: transparent;
+
     font-size: 4rem;
     display: inline;
     line-height: 1;
