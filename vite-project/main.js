@@ -56,6 +56,7 @@ gltfLoader.load('enterprise.glb', (gltf) => {
   scene.add(loadedModel);
   createLights();
   setCurve("bottom1");
+  pastIndex = "bottom1";
   updatePosition(0, angle);
   noScroll = true;
   document.addEventListener('scroll', () => {
@@ -138,45 +139,60 @@ const curve = new THREE.CurvePath();
 var points;
 const curveNames = ["left1", "bottom1", "right1"]
 function setCurve(curveName) {
-  curve.curves = [];
-  if (curveName == "left1") {
-    points = [
-      new THREE.Vector3(-150, 0, 0),
-      new THREE.Vector3(0, 0, 10),
-      new THREE.Vector3(150, 0, 0),
-    ];
-    angle = new THREE.Quaternion().copy(fromLeft);
-  } 
-  else if (curveName == "bottom1") {
-    points = [
-      new THREE.Vector3(0, -150, 0),
-      new THREE.Vector3(0, 0, 10),
-      new THREE.Vector3(0, 150, 0),
-    ];
-    angle = new THREE.Quaternion().copy(fromAbove);
-  }
-  else if (curveName == "right1") {
-    points = [
-      new THREE.Vector3(150, 0, 0),
-      new THREE.Vector3(0, 0, 10),
-      new THREE.Vector3(-150, 0, 0),
-    ];
-    angle = new THREE.Quaternion().copy(fromRight);
-  }
-  else{
-    points = [
-      new THREE.Vector3(-100, 0, 0),
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(100, 100, 0),
-    ];
-    angle = new THREE.Quaternion().copy(fromAbove);
+  // console.log("set curves");
+  var romPoints = [];
+
+  switch (curveName) {
+    case "left1":
+      romPoints = [
+        new THREE.Vector3(-150, 0, 0),
+        new THREE.Vector3(0, 0, 10),
+        new THREE.Vector3(150, 0, 0),
+      ];
+      angle.copy(fromLeft);
+      break;
+
+    case "bottom1":
+      romPoints = [
+        new THREE.Vector3(-100, 0, 0),
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(100, 100, 0),
+      ];
+      angle.copy(fromAbove);
+      break;
+
+    case "right1":
+      romPoints = [
+        new THREE.Vector3(150, 0, 0),
+        new THREE.Vector3(0, 0, 10),
+        new THREE.Vector3(-150, 0, 0),
+      ];
+      angle.copy(fromRight);
+      break;
+
+    default:
+      romPoints = [
+        new THREE.Vector3(-150, 0, 0),
+        new THREE.Vector3(0, 0, 10),
+        new THREE.Vector3(150, 0, 0),
+      ];
+      angle.copy(fromLeft);
+      break;
   }
 
-  curve.add(new THREE.CatmullRomCurve3(points));
-  const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-  const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
-  const line = new THREE.Line(lineGeometry, lineMaterial);
-  scene.add(line);
+  
+  curve.curves = [];
+  curve.add(new THREE.CatmullRomCurve3(romPoints));
+  points = curve.getPoints(100);
+
+
+  // const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+  // const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+  // const line = new THREE.Line(lineGeometry, lineMaterial);
+  // scene.add(line);
+
+  // console.log(points);
+  // console.log(curve.curves);
 }
 
 
@@ -200,23 +216,31 @@ const axis = new THREE.Vector3();
 
 
 function updatePosition(prog, afterQuat){
-  // update position
-  const position = new THREE.Vector3();
-  curve.getPointAt(prog, position);
-  loadedModel.position.copy(position);
 
-  // calculate updated rotation
-  if (prog < 1) {
+  // console.log(curve.curves);
+
+  // quick fix for type error issue
+  try{
+    const position = new THREE.Vector3();
+    curve.getPointAt(prog, position);
+    loadedModel.position.copy(position);
+
+    // calculate updated rotation 
     const tangent = curve.getTangentAt(prog);
     axis.crossVectors( up, tangent ).normalize();
     const radians = Math.acos(up.dot(tangent));
     loadedModel.quaternion.setFromAxisAngle( axis, radians );
     loadedModel.quaternion.multiply(afterQuat);
+
+    // apply to scene
+    updateLightPositions();
+    renderer.render(scene, camera);
+  }
+  catch(error){
+    // console.log(error + prog);
   }
 
-  // apply to scene
-  updateLightPositions();
-  renderer.render(scene, camera);
+
 }
 
 
@@ -225,11 +249,11 @@ function animate() {
   const elapsed = clock.getElapsedTime();
   const progress = (elapsed * speed) / duration;
 
-  // Get the position on the curve
-  updatePosition(progress, angle);
-
   // Continue the animation
   if (progress < 1) {
+    // Get the position on the curve
+    updatePosition(progress, angle);
+
     requestAnimationFrame(animate);
   }
   else{
