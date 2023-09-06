@@ -36,6 +36,7 @@ function addStar() {
 }
 Array(300).fill().forEach(addStar);
 
+var noScroll;
 
 // Load the GLB model
 const gltfLoader = new GLTFLoader();
@@ -52,7 +53,7 @@ gltfLoader.load('enterprise.glb', (gltf) => {
   renderer.render(scene, camera);
   updatePosition(0);
 
-  var noScroll = true;
+  noScroll = true;
 
 // Assuming you have a canvas element with the id "yourCanvas"
 const canvas = document.getElementById("bg");
@@ -78,48 +79,48 @@ console.log(window.innerWidth);
 
 
 // Define your Bezier curve parameters
-// const curve1 = new THREE.CubicBezierCurve3(
-//     new THREE.Vector3(0, 0, 50),
-//     new THREE.Vector3(0, 20, 20),
-//     new THREE.Vector3(0, 50, 0),
-//     new THREE.Vector3(0, 50, 0)
-// );
-
-// const curve2 = new THREE.CubicBezierCurve3(
-//     new THREE.Vector3(0, 50, 0),
-//     new THREE.Vector3(0, 70, -10),
-//     new THREE.Vector3(200, 100, -50),
-//     new THREE.Vector3(200, 100, -50)
-// );
-
 const curve1 = new THREE.CubicBezierCurve3(
-  new THREE.Vector3(0, 0, 0),   // Start point
-  new THREE.Vector3(0, 5, 0),   // Control point 1 (vertical movement)
-  new THREE.Vector3(0, 10, 0),  // Control point 2 (vertical movement)
-  new THREE.Vector3(0, 15, 0)   // End point (higher up)
+    new THREE.Vector3(0, 0, 50),
+    new THREE.Vector3(0, 20, 20),
+    new THREE.Vector3(0, 50, 0),
+    new THREE.Vector3(0, 50, 0)
 );
 
-// Control points for the second Bezier curve (horizontal movement)
 const curve2 = new THREE.CubicBezierCurve3(
-  new THREE.Vector3(0, 15, 0),  // Start point (end of the first curve)
-  new THREE.Vector3(0, 20, 0),  // Control point 1 (horizontal movement)
-  new THREE.Vector3(0, 25, -5), // Control point 2 (horizontal movement)
-  new THREE.Vector3(0, 30, -5)  // End point (further to the right)
+    new THREE.Vector3(0, 50, 0),
+    new THREE.Vector3(0, 70, -10),
+    new THREE.Vector3(100, 100, -50),
+    new THREE.Vector3(100, 100, -50)
 );
 
-// Control points for the second Bezier curve (horizontal movement)
-const curve3 = new THREE.CubicBezierCurve3(
-  new THREE.Vector3(0, 30, -5),  // Start point (end of the first curve)
-  new THREE.Vector3(0, 35, -5),  // Control point 1 (horizontal movement)
-  new THREE.Vector3(10, 40, -5), // Control point 2 (horizontal movement)
-  new THREE.Vector3(10, 40, -5)  // End point (further to the right)
-);
+// const curve1 = new THREE.CubicBezierCurve3(
+//   new THREE.Vector3(0, 0, 0),   // Start point
+//   new THREE.Vector3(0, 5, 0),   // Control point 1 (vertical movement)
+//   new THREE.Vector3(0, 10, 0),  // Control point 2 (vertical movement)
+//   new THREE.Vector3(0, 15, 0)   // End point (higher up)
+// );
+
+// // Control points for the second Bezier curve (horizontal movement)
+// const curve2 = new THREE.CubicBezierCurve3(
+//   new THREE.Vector3(0, 15, 0),  // Start point (end of the first curve)
+//   new THREE.Vector3(0, 20, 0),  // Control point 1 (horizontal movement)
+//   new THREE.Vector3(0, 25, -5), // Control point 2 (horizontal movement)
+//   new THREE.Vector3(0, 30, -5)  // End point (further to the right)
+// );
+
+// // Control points for the second Bezier curve (horizontal movement)
+// const curve3 = new THREE.CubicBezierCurve3(
+//   new THREE.Vector3(0, 30, -5),  // Start point (end of the first curve)
+//   new THREE.Vector3(0, 35, -5),  // Control point 1 (horizontal movement)
+//   new THREE.Vector3(10, 40, -5), // Control point 2 (horizontal movement)
+//   new THREE.Vector3(10, 40, -5)  // End point (further to the right)
+// );
 
 // Create a CurvePath and add your curves to it
 const curve = new THREE.CurvePath();
 curve.add(curve1);
 curve.add(curve2);
-curve.add(curve3);
+// curve.add(curve3);
 
 // Now, you can use this curvePath for various purposes in Three.js
 
@@ -163,11 +164,16 @@ function updatePosition(prog){
   loadedModel.position.copy(position);
 
   // calculate updated rotation
-  const tangent = curve.getTangentAt(prog);
-  axis.crossVectors( up, tangent ).normalize();
-  const radians = Math.acos(up.dot(tangent));
-  loadedModel.quaternion.setFromAxisAngle( axis, radians );
-  loadedModel.quaternion.multiply(fromAboveQuaternion);
+  if (prog < 1) {
+    console.log(prog);
+    const tangent = curve.getTangentAt(prog);
+    axis.crossVectors( up, tangent ).normalize();
+    const radians = Math.acos(up.dot(tangent));
+    loadedModel.quaternion.setFromAxisAngle( axis, radians );
+    loadedModel.quaternion.multiply(fromAboveQuaternion);
+
+  }
+
 
   // apply to scene
   renderer.render(scene, camera);
@@ -181,7 +187,6 @@ function animate() {
 
   // Get the position on the curve
   updatePosition(progress);
-  console.log(progress);
 
   // Render the scene
   
@@ -191,6 +196,7 @@ function animate() {
     requestAnimationFrame(animate);
   }
   else{
+    updatePosition(0);
     noScroll = true;
   }
 }
