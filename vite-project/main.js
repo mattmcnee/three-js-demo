@@ -8,11 +8,24 @@ const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector('#bg'),
 });
 
+window.addEventListener('resize', () => {
+  const newWidth = window.innerWidth;
+  const newHeight = window.innerHeight;
+
+  // Update renderer size
+  renderer.setSize(newWidth, newHeight);
+
+  // Update camera aspect ratio
+  camera.aspect = newWidth / newHeight;
+  camera.updateProjectionMatrix();
+});
+
 camera.position.z = 40;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 let loadedModel;
+let noScroll;
 const gltfLoader = new GLTFLoader();
 gltfLoader.load('enterprise.glb', (gltf) => {
   loadedModel = gltf.scene;
@@ -28,6 +41,14 @@ gltfLoader.load('enterprise.glb', (gltf) => {
   scene.add(loadedModel);
   createLights();
   updateLightPositions();
+  noScroll = true;
+  document.addEventListener('click', () => {
+      if (noScroll) {
+          noScroll = false;
+          clock.start();
+          animate();
+      }
+  });
 
   animate();
 });
@@ -91,28 +112,94 @@ function updateLightPositions() {
   }
 }
 
-// Create an ambient light
-const ambientLight = new THREE.AmbientLight(0x333333); // Adjust the color as needed
-scene.add(ambientLight);
+const curve1 = new THREE.CubicBezierCurve3(
+    new THREE.Vector3(0, -50, 20),
+    new THREE.Vector3(0, -10, 20),
+    new THREE.Vector3(0, 0, 10),
+    new THREE.Vector3(0, 10, 0)
+);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // Color: white, Intensity: 1
-directionalLight.position.set(1, 1, 1); // Set the direction of the light
+const curve2 = new THREE.CubicBezierCurve3(
+    new THREE.Vector3(0, 10, 0),
+    new THREE.Vector3(0, 20, -10),
+    new THREE.Vector3(5, 30, -70),
+    new THREE.Vector3(10, 40, -100)
+);
+
+
+// Create a CurvePath and add your curves to it
+const curve = new THREE.CurvePath();
+curve.add(curve1);
+curve.add(curve2);
+// curve.add(curve3);
+
+// Number of points on the curve
+const numPoints = 100;
+const points = curve.getPoints(numPoints);
+
+// Display the curve
+const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+const line = new THREE.Line(lineGeometry, lineMaterial);
+scene.add(line);
+
+// These lights are mainly for the stars
+const ambientLight = new THREE.AmbientLight(0x333333);
+scene.add(ambientLight);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(1, 1, 1);
 scene.add(directionalLight);
 
-// Function to animate the cube
-const animate = () => {
-  requestAnimationFrame(animate);
+// Animation loop
+const clock = new THREE.Clock();
+const duration = 8; // Duration of the animation in seconds
+const speed = 1;    // Adjust the speed of the animation
 
-  // Rotate the cube
-  loadedModel.rotation.x += 0.001;
-  loadedModel.rotation.z -= 0.001;
+// Used for rotation calculations
+const up = new THREE.Vector3( 0, 1, 0 );
+const axis = new THREE.Vector3();
 
+// Rotation of object after aligned to line
+var euler = new THREE.Euler(0, -Math.PI / 2, Math.PI/2);
+const fromAboveQuaternion = new THREE.Quaternion();
+fromAboveQuaternion.setFromEuler(euler);
+
+function updatePosition(prog){
+  // update position
+  const position = new THREE.Vector3();
+  curve.getPointAt(prog, position);
+  loadedModel.position.copy(position);
+
+  // calculate updated rotation
+  if (prog < 1) {
+    console.log(prog);
+    const tangent = curve.getTangentAt(prog);
+    axis.crossVectors( up, tangent ).normalize();
+    const radians = Math.acos(up.dot(tangent));
+    loadedModel.quaternion.setFromAxisAngle( axis, radians );
+    loadedModel.quaternion.multiply(fromAboveQuaternion);
+  }
+
+  // apply to scene
+  renderer.render(scene, camera);
+}
+
+
+function animate() {
+  const elapsed = clock.getElapsedTime();
+  const progress = (elapsed * speed) / duration;
+
+  // Get the position on the curve
+  updatePosition(progress);
   updateLightPositions();
 
-  // Render the scene
-  renderer.render(scene, camera);
-};
-
-// Call the animate function to start rendering
-
+  // Continue the animation
+  if (progress < 1) {
+    requestAnimationFrame(animate);
+  }
+  else{
+    updatePosition(0);
+    noScroll = true;
+  }
+}
 
