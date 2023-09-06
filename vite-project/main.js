@@ -40,7 +40,7 @@ gltfLoader.load('enterprise.glb', (gltf) => {
   // Add the loaded model to the scene
   scene.add(loadedModel);
   createLights();
-  updateLightPositions();
+  updatePosition(0, fromSideQuaternion);
   noScroll = true;
   document.addEventListener('click', () => {
       if (noScroll) {
@@ -112,11 +112,25 @@ function updateLightPositions() {
   }
 }
 
+// const curve1 = new THREE.CubicBezierCurve3(
+//     new THREE.Vector3(0, -50, 20),
+//     new THREE.Vector3(0, -10, 20),
+//     new THREE.Vector3(0, 0, 10),
+//     new THREE.Vector3(0, 10, 0)
+// );
+
+// const curve2 = new THREE.CubicBezierCurve3(
+//     new THREE.Vector3(0, 10, 0),
+//     new THREE.Vector3(0, 20, -10),
+//     new THREE.Vector3(5, 30, -70),
+//     new THREE.Vector3(10, 40, -100)
+// );
+
 const curve1 = new THREE.CubicBezierCurve3(
-    new THREE.Vector3(0, -50, 20),
-    new THREE.Vector3(0, -10, 20),
-    new THREE.Vector3(0, 0, 10),
-    new THREE.Vector3(0, 10, 0)
+    new THREE.Vector3(-50, 0, 0),
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(10, 0, 0)
 );
 
 const curve2 = new THREE.CubicBezierCurve3(
@@ -155,16 +169,26 @@ const clock = new THREE.Clock();
 const duration = 8; // Duration of the animation in seconds
 const speed = 1;    // Adjust the speed of the animation
 
+
+
 // Used for rotation calculations
 const up = new THREE.Vector3( 0, 1, 0 );
 const axis = new THREE.Vector3();
 
+
+
 // Rotation of object after aligned to line
+var euler = new THREE.Euler(0, Math.PI, Math.PI/2);
+const fromSideQuaternion = new THREE.Quaternion();
+fromSideQuaternion.setFromEuler(euler);
+
 var euler = new THREE.Euler(0, -Math.PI / 2, Math.PI/2);
 const fromAboveQuaternion = new THREE.Quaternion();
 fromAboveQuaternion.setFromEuler(euler);
 
-function updatePosition(prog){
+
+
+function updatePosition(prog, afterQuat){
   // update position
   const position = new THREE.Vector3();
   curve.getPointAt(prog, position);
@@ -172,15 +196,16 @@ function updatePosition(prog){
 
   // calculate updated rotation
   if (prog < 1) {
-    console.log(prog);
+    console.log(prog, afterQuat);
     const tangent = curve.getTangentAt(prog);
     axis.crossVectors( up, tangent ).normalize();
     const radians = Math.acos(up.dot(tangent));
     loadedModel.quaternion.setFromAxisAngle( axis, radians );
-    loadedModel.quaternion.multiply(fromAboveQuaternion);
+    loadedModel.quaternion.multiply(afterQuat);
   }
 
   // apply to scene
+  updateLightPositions();
   renderer.render(scene, camera);
 }
 
@@ -190,15 +215,14 @@ function animate() {
   const progress = (elapsed * speed) / duration;
 
   // Get the position on the curve
-  updatePosition(progress);
-  updateLightPositions();
+  updatePosition(progress, fromSideQuaternion);
 
   // Continue the animation
   if (progress < 1) {
     requestAnimationFrame(animate);
   }
   else{
-    updatePosition(0);
+    updatePosition(0, fromSideQuaternion);
     noScroll = true;
   }
 }
