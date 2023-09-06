@@ -20,10 +20,9 @@ const ambientLight = new THREE.AmbientLight(0xffffff);
 scene.add(pointLight, ambientLight);
 
 let loadedModel;
-let angle = 0; // Initial angle for orbit
-const radius = 50; // Radius of the orbit
+var noScroll;
 
-
+// Adds background stars
 function addStar() {
   const geometry = new THREE.SphereGeometry(0.25, 24, 24);
   const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
@@ -36,7 +35,7 @@ function addStar() {
 }
 Array(300).fill().forEach(addStar);
 
-var noScroll;
+
 
 // Load the GLB model
 const gltfLoader = new GLTFLoader();
@@ -54,31 +53,15 @@ gltfLoader.load('enterprise.glb', (gltf) => {
   updatePosition(0);
 
   noScroll = true;
-
-// Assuming you have a canvas element with the id "yourCanvas"
-const canvas = document.getElementById("bg");
-
-document.addEventListener('click', () => {
-    if (noScroll) {
-        noScroll = false;
-        clock.start();
-        animate();
-    }
+  document.addEventListener('click', () => {
+      if (noScroll) {
+          noScroll = false;
+          clock.start();
+          animate();
+      }
+  });
 });
 
-  // animate(); // Start the animation loop
-});
-
-console.log(window.innerWidth);
-
-// Define the control points for the quadratic Bezier curve
-// const startPoint = new THREE.Vector3(0, 0, 0);
-// const controlPoint1 = new THREE.Vector3(50, 10, -10);
-// const endPoint = new THREE.Vector3(200, 30, -40);
-
-
-
-// Define your Bezier curve parameters
 const curve1 = new THREE.CubicBezierCurve3(
     new THREE.Vector3(0, 0, 50),
     new THREE.Vector3(0, 20, 20),
@@ -100,7 +83,6 @@ const curve2 = new THREE.CubicBezierCurve3(
 //   new THREE.Vector3(0, 15, 0)   // End point (higher up)
 // );
 
-// // Control points for the second Bezier curve (horizontal movement)
 // const curve2 = new THREE.CubicBezierCurve3(
 //   new THREE.Vector3(0, 15, 0),  // Start point (end of the first curve)
 //   new THREE.Vector3(0, 20, 0),  // Control point 1 (horizontal movement)
@@ -108,7 +90,6 @@ const curve2 = new THREE.CubicBezierCurve3(
 //   new THREE.Vector3(0, 30, -5)  // End point (further to the right)
 // );
 
-// // Control points for the second Bezier curve (horizontal movement)
 // const curve3 = new THREE.CubicBezierCurve3(
 //   new THREE.Vector3(0, 30, -5),  // Start point (end of the first curve)
 //   new THREE.Vector3(0, 35, -5),  // Control point 1 (horizontal movement)
@@ -122,18 +103,9 @@ curve.add(curve1);
 curve.add(curve2);
 // curve.add(curve3);
 
-// Now, you can use this curvePath for various purposes in Three.js
-
-// Now, you can use this path in your animation or other Three.js elements
-
-
-// Create a quadratic Bezier curve
-// const curve = new THREE.QuadraticBezierCurve3(startPoint, controlPoint1, endPoint);
-
 // Number of points on the curve
 const numPoints = 100;
 const points = curve.getPoints(numPoints);
-
 
 // Display the curve
 const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
@@ -146,15 +118,14 @@ const clock = new THREE.Clock();
 const duration = 8; // Duration of the animation in seconds
 const speed = 1;    // Adjust the speed of the animation
 
+// Used for rotation calculations
+const up = new THREE.Vector3( 0, 1, 0 );
+const axis = new THREE.Vector3();
 
-  const up = new THREE.Vector3( 0, 1, 0 );
-  const axis = new THREE.Vector3();
-
-  
-  var euler = new THREE.Euler(0, -Math.PI / 2, Math.PI/2);
-  const fromAboveQuaternion = new THREE.Quaternion();
-  fromAboveQuaternion.setFromEuler(euler);
-
+// Rotation of object after aligned to line
+var euler = new THREE.Euler(0, -Math.PI / 2, Math.PI/2);
+const fromAboveQuaternion = new THREE.Quaternion();
+fromAboveQuaternion.setFromEuler(euler);
 
 
 function updatePosition(prog){
@@ -171,15 +142,11 @@ function updatePosition(prog){
     const radians = Math.acos(up.dot(tangent));
     loadedModel.quaternion.setFromAxisAngle( axis, radians );
     loadedModel.quaternion.multiply(fromAboveQuaternion);
-
   }
-
 
   // apply to scene
   renderer.render(scene, camera);
 }
-
-
 
 function animate() {
   const elapsed = clock.getElapsedTime();
@@ -187,9 +154,6 @@ function animate() {
 
   // Get the position on the curve
   updatePosition(progress);
-
-  // Render the scene
-  
 
   // Continue the animation
   if (progress < 1) {
