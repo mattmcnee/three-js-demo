@@ -102,15 +102,24 @@ const curve1 = new THREE.CubicBezierCurve3(
 // Control points for the second Bezier curve (horizontal movement)
 const curve2 = new THREE.CubicBezierCurve3(
   new THREE.Vector3(0, 15, 0),  // Start point (end of the first curve)
-  new THREE.Vector3(0, 20, 5),  // Control point 1 (horizontal movement)
-  new THREE.Vector3(0, 25, 5), // Control point 2 (horizontal movement)
-  new THREE.Vector3(0, 30, 0)  // End point (further to the right)
+  new THREE.Vector3(0, 20, 0),  // Control point 1 (horizontal movement)
+  new THREE.Vector3(0, 25, -5), // Control point 2 (horizontal movement)
+  new THREE.Vector3(0, 30, -5)  // End point (further to the right)
+);
+
+// Control points for the second Bezier curve (horizontal movement)
+const curve3 = new THREE.CubicBezierCurve3(
+  new THREE.Vector3(0, 30, -5),  // Start point (end of the first curve)
+  new THREE.Vector3(0, 35, -5),  // Control point 1 (horizontal movement)
+  new THREE.Vector3(10, 40, -5), // Control point 2 (horizontal movement)
+  new THREE.Vector3(10, 40, -5)  // End point (further to the right)
 );
 
 // Create a CurvePath and add your curves to it
 const curve = new THREE.CurvePath();
 curve.add(curve1);
 curve.add(curve2);
+curve.add(curve3);
 
 // Now, you can use this curvePath for various purposes in Three.js
 
@@ -136,6 +145,11 @@ const clock = new THREE.Clock();
 const duration = 8; // Duration of the animation in seconds
 const speed = 1;    // Adjust the speed of the animation
 
+
+  const up = new THREE.Vector3( 0, 1, 0 );
+  const axis = new THREE.Vector3( );
+
+
 function updatePosition(prog){
   const position = new THREE.Vector3();
   curve.getPointAt(prog, position);
@@ -143,19 +157,18 @@ function updatePosition(prog){
   const tangent = curve.getTangentAt(prog);
   console.log(tangent);
 
-  // Set the object's rotation to align with the tangent
-  const rotation = new THREE.Euler().setFromVector3(tangent);
-  // rotation.z = Math.PI;
-  // rotation.y += Math.PI/2;
-  // rotation.z += Math.PI/2;
-
-  // rotation.y = Math.PI / 2;
-  // rotation.z = Math.PI;
-  // rotation.x = Math.PI;
-
-  // Update the model's position
   loadedModel.position.copy(position);
-  loadedModel.rotation.copy(rotation);
+  axis.crossVectors( up, tangent ).normalize();
+    
+  const radians = Math.acos(up.dot(tangent));
+    
+  loadedModel.quaternion.setFromAxisAngle( axis, radians );
+
+  const additionalQuaternion = new THREE.Quaternion();
+  const euler = new THREE.Euler(0, -Math.PI / 2, Math.PI/2);
+  additionalQuaternion.setFromEuler(euler);
+
+  loadedModel.quaternion.multiply(additionalQuaternion);
 
   renderer.render(scene, camera);
 }
@@ -177,8 +190,7 @@ function animate() {
   if (progress < 1) {
     requestAnimationFrame(animate);
   }
-  // else{
-  //   clock.start();
-  //   requestAnimationFrame(animate);
-  // }
+  else{
+    noScroll = true;
+  }
 }
