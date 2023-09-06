@@ -24,6 +24,36 @@ camera.position.z = 40;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// Rotation of object after aligned to line
+var euler = new THREE.Euler(0, Math.PI, Math.PI/2);
+const fromLeft = new THREE.Quaternion();
+fromLeft.setFromEuler(euler);
+
+euler = new THREE.Euler(Math.PI, Math.PI, -Math.PI/2);
+const fromRight = new THREE.Quaternion();
+fromRight.setFromEuler(euler);
+
+euler = new THREE.Euler(0, -Math.PI / 2, Math.PI/2);
+const fromAbove = new THREE.Quaternion();
+fromAbove.setFromEuler(euler);
+
+var angle = new THREE.Quaternion().copy(fromAbove);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 let loadedModel;
 let noScroll;
 const gltfLoader = new GLTFLoader();
@@ -40,9 +70,10 @@ gltfLoader.load('enterprise.glb', (gltf) => {
   // Add the loaded model to the scene
   scene.add(loadedModel);
   createLights();
-  updatePosition(0, fromSideQuaternion);
+  setCurve("left1");
+  updatePosition(0, angle);
   noScroll = true;
-  document.addEventListener('click', () => {
+  document.addEventListener('scroll', () => {
       if (noScroll) {
           noScroll = false;
           clock.start();
@@ -50,7 +81,13 @@ gltfLoader.load('enterprise.glb', (gltf) => {
       }
   });
 
-  animate();
+  document.addEventListener('click', () => {
+      if (noScroll) {
+          noScroll = false;
+          clock.start();
+          animate();
+      }
+  });
 });
 
 
@@ -112,40 +149,68 @@ function updateLightPositions() {
   }
 }
 
-// const curve1 = new THREE.CubicBezierCurve3(
-//     new THREE.Vector3(0, -50, 20),
-//     new THREE.Vector3(0, -10, 20),
-//     new THREE.Vector3(0, 0, 10),
-//     new THREE.Vector3(0, 10, 0)
-// );
-
-// const curve2 = new THREE.CubicBezierCurve3(
-//     new THREE.Vector3(0, 10, 0),
-//     new THREE.Vector3(0, 20, -10),
-//     new THREE.Vector3(5, 30, -70),
-//     new THREE.Vector3(10, 40, -100)
-// );
-
-const curve1 = new THREE.CubicBezierCurve3(
-    new THREE.Vector3(-50, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(10, 0, 0)
-);
-
-const curve2 = new THREE.CubicBezierCurve3(
-    new THREE.Vector3(0, 10, 0),
-    new THREE.Vector3(0, 20, -10),
-    new THREE.Vector3(5, 30, -70),
-    new THREE.Vector3(10, 40, -100)
-);
 
 
-// Create a CurvePath and add your curves to it
 const curve = new THREE.CurvePath();
-curve.add(curve1);
-curve.add(curve2);
-// curve.add(curve3);
+const curveNames = ["left1", "bottom1", "right1"]
+function setCurve(curveName) {
+  curve.curves = [];
+  if (curveName == "left1") {
+    const curve1 = new THREE.CubicBezierCurve3(
+      new THREE.Vector3(-150, 0, 0),
+      new THREE.Vector3(-50, 0, 0),
+      new THREE.Vector3(-30, 0, 10),
+      new THREE.Vector3(0, 0, 10)
+    );
+
+    const curve2 = new THREE.CubicBezierCurve3(
+      new THREE.Vector3(0, 0, 10),
+      new THREE.Vector3(30, 0, 10),
+      new THREE.Vector3(50, 0, 0),
+      new THREE.Vector3(150, 0, 0)
+    );
+    curve.add(curve1);
+    curve.add(curve2);
+    angle = new THREE.Quaternion().copy(fromLeft);
+  } 
+  else if (curveName == "bottom1") {
+    const curve1 = new THREE.CubicBezierCurve3(
+      new THREE.Vector3(0, -50, 20),
+      new THREE.Vector3(0, -10, 20),
+      new THREE.Vector3(0, 0, 10),
+      new THREE.Vector3(0, 10, 0)
+    );
+
+    const curve2 = new THREE.CubicBezierCurve3(
+      new THREE.Vector3(0, 10, 0),
+      new THREE.Vector3(0, 20, -10),
+      new THREE.Vector3(5, 30, -70),
+      new THREE.Vector3(10, 40, -100)
+    );
+    curve.add(curve1);
+    curve.add(curve2);
+    angle = new THREE.Quaternion().copy(fromAbove);
+  }
+  else if (curveName == "right1") {
+    const curve1 = new THREE.CubicBezierCurve3(
+        new THREE.Vector3(150, 0, 0),
+        new THREE.Vector3(50, 0, 0),
+        new THREE.Vector3(30, 0, 10),
+        new THREE.Vector3(0, 0, 10)
+    );
+
+    const curve2 = new THREE.CubicBezierCurve3(
+        new THREE.Vector3(0, 0, 10),
+        new THREE.Vector3(-30, 0, 10),
+        new THREE.Vector3(-50, 0, 0),
+        new THREE.Vector3(-150, 0, 0)
+    );
+    curve.add(curve1);
+    curve.add(curve2);
+    angle = new THREE.Quaternion().copy(fromRight);
+  }
+}
+
 
 // Number of points on the curve
 const numPoints = 100;
@@ -166,7 +231,7 @@ scene.add(directionalLight);
 
 // Animation loop
 const clock = new THREE.Clock();
-const duration = 8; // Duration of the animation in seconds
+const duration = 5; // Duration of the animation in seconds
 const speed = 1;    // Adjust the speed of the animation
 
 
@@ -177,14 +242,7 @@ const axis = new THREE.Vector3();
 
 
 
-// Rotation of object after aligned to line
-var euler = new THREE.Euler(0, Math.PI, Math.PI/2);
-const fromSideQuaternion = new THREE.Quaternion();
-fromSideQuaternion.setFromEuler(euler);
 
-var euler = new THREE.Euler(0, -Math.PI / 2, Math.PI/2);
-const fromAboveQuaternion = new THREE.Quaternion();
-fromAboveQuaternion.setFromEuler(euler);
 
 
 
@@ -196,7 +254,6 @@ function updatePosition(prog, afterQuat){
 
   // calculate updated rotation
   if (prog < 1) {
-    console.log(prog, afterQuat);
     const tangent = curve.getTangentAt(prog);
     axis.crossVectors( up, tangent ).normalize();
     const radians = Math.acos(up.dot(tangent));
@@ -215,14 +272,19 @@ function animate() {
   const progress = (elapsed * speed) / duration;
 
   // Get the position on the curve
-  updatePosition(progress, fromSideQuaternion);
+  updatePosition(progress, angle);
 
   // Continue the animation
   if (progress < 1) {
     requestAnimationFrame(animate);
   }
   else{
-    updatePosition(0, fromSideQuaternion);
+        var randomIndex = Math.floor(Math.random() * curveNames.length);
+    setCurve(curveNames[randomIndex]);
+
+
+
+    updatePosition(0, angle);
     noScroll = true;
   }
 }
