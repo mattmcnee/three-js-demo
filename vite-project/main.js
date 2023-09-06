@@ -147,29 +147,29 @@ const speed = 1;    // Adjust the speed of the animation
 
 
   const up = new THREE.Vector3( 0, 1, 0 );
-  const axis = new THREE.Vector3( );
+  const axis = new THREE.Vector3();
+
+  
+  var euler = new THREE.Euler(0, -Math.PI / 2, Math.PI/2);
+  const fromAboveQuaternion = new THREE.Quaternion();
+  fromAboveQuaternion.setFromEuler(euler);
+
 
 
 function updatePosition(prog){
+  // update position
   const position = new THREE.Vector3();
   curve.getPointAt(prog, position);
-
-  const tangent = curve.getTangentAt(prog);
-  console.log(tangent);
-
   loadedModel.position.copy(position);
+
+  // calculate updated rotation
+  const tangent = curve.getTangentAt(prog);
   axis.crossVectors( up, tangent ).normalize();
-    
   const radians = Math.acos(up.dot(tangent));
-    
   loadedModel.quaternion.setFromAxisAngle( axis, radians );
+  loadedModel.quaternion.multiply(fromAboveQuaternion);
 
-  const additionalQuaternion = new THREE.Quaternion();
-  const euler = new THREE.Euler(0, -Math.PI / 2, Math.PI/2);
-  additionalQuaternion.setFromEuler(euler);
-
-  loadedModel.quaternion.multiply(additionalQuaternion);
-
+  // apply to scene
   renderer.render(scene, camera);
 }
 
