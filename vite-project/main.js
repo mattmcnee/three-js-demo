@@ -39,21 +39,6 @@ fromAbove.setFromEuler(euler);
 
 var angle = new THREE.Quaternion().copy(fromAbove);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 let loadedModel;
 let noScroll;
 const gltfLoader = new GLTFLoader();
@@ -70,7 +55,7 @@ gltfLoader.load('enterprise.glb', (gltf) => {
   // Add the loaded model to the scene
   scene.add(loadedModel);
   createLights();
-  setCurve("left1");
+  setCurve("bottom1");
   updatePosition(0, angle);
   noScroll = true;
   document.addEventListener('scroll', () => {
@@ -130,8 +115,6 @@ function createLights() {
   }
 }
 
-console.log(lights);
-
 function updateLightPositions() {
   const center = loadedModel.position.clone();
   const numLights = 24;
@@ -152,75 +135,50 @@ function updateLightPositions() {
 
 
 const curve = new THREE.CurvePath();
+var points;
 const curveNames = ["left1", "bottom1", "right1"]
 function setCurve(curveName) {
   curve.curves = [];
   if (curveName == "left1") {
-    const curve1 = new THREE.CubicBezierCurve3(
+    points = [
       new THREE.Vector3(-150, 0, 0),
-      new THREE.Vector3(-50, 0, 0),
-      new THREE.Vector3(-30, 0, 10),
-      new THREE.Vector3(0, 0, 10)
-    );
-
-    const curve2 = new THREE.CubicBezierCurve3(
       new THREE.Vector3(0, 0, 10),
-      new THREE.Vector3(30, 0, 10),
-      new THREE.Vector3(50, 0, 0),
-      new THREE.Vector3(150, 0, 0)
-    );
-    curve.add(curve1);
-    curve.add(curve2);
+      new THREE.Vector3(150, 0, 0),
+    ];
     angle = new THREE.Quaternion().copy(fromLeft);
   } 
   else if (curveName == "bottom1") {
-    const curve1 = new THREE.CubicBezierCurve3(
-      new THREE.Vector3(0, -50, 20),
-      new THREE.Vector3(0, -10, 20),
+    points = [
+      new THREE.Vector3(0, -150, 0),
       new THREE.Vector3(0, 0, 10),
-      new THREE.Vector3(0, 10, 0)
-    );
-
-    const curve2 = new THREE.CubicBezierCurve3(
-      new THREE.Vector3(0, 10, 0),
-      new THREE.Vector3(0, 20, -10),
-      new THREE.Vector3(5, 30, -70),
-      new THREE.Vector3(10, 40, -100)
-    );
-    curve.add(curve1);
-    curve.add(curve2);
+      new THREE.Vector3(0, 150, 0),
+    ];
     angle = new THREE.Quaternion().copy(fromAbove);
   }
   else if (curveName == "right1") {
-    const curve1 = new THREE.CubicBezierCurve3(
-        new THREE.Vector3(150, 0, 0),
-        new THREE.Vector3(50, 0, 0),
-        new THREE.Vector3(30, 0, 10),
-        new THREE.Vector3(0, 0, 10)
-    );
-
-    const curve2 = new THREE.CubicBezierCurve3(
-        new THREE.Vector3(0, 0, 10),
-        new THREE.Vector3(-30, 0, 10),
-        new THREE.Vector3(-50, 0, 0),
-        new THREE.Vector3(-150, 0, 0)
-    );
-    curve.add(curve1);
-    curve.add(curve2);
+    points = [
+      new THREE.Vector3(150, 0, 0),
+      new THREE.Vector3(0, 0, 10),
+      new THREE.Vector3(-150, 0, 0),
+    ];
     angle = new THREE.Quaternion().copy(fromRight);
   }
+  else{
+    points = [
+      new THREE.Vector3(-100, 0, 0),
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(100, 100, 0),
+    ];
+    angle = new THREE.Quaternion().copy(fromAbove);
+  }
+
+  curve.add(new THREE.CatmullRomCurve3(points));
+  const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+  const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+  const line = new THREE.Line(lineGeometry, lineMaterial);
+  scene.add(line);
 }
 
-
-// Number of points on the curve
-const numPoints = 100;
-const points = curve.getPoints(numPoints);
-
-// Display the curve
-const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
-const line = new THREE.Line(lineGeometry, lineMaterial);
-scene.add(line);
 
 // These lights are mainly for the stars
 const ambientLight = new THREE.AmbientLight(0x333333);
@@ -239,11 +197,6 @@ const speed = 1;    // Adjust the speed of the animation
 // Used for rotation calculations
 const up = new THREE.Vector3( 0, 1, 0 );
 const axis = new THREE.Vector3();
-
-
-
-
-
 
 
 function updatePosition(prog, afterQuat){
@@ -267,6 +220,7 @@ function updatePosition(prog, afterQuat){
 }
 
 
+var pastIndex;
 function animate() {
   const elapsed = clock.getElapsedTime();
   const progress = (elapsed * speed) / duration;
@@ -279,11 +233,12 @@ function animate() {
     requestAnimationFrame(animate);
   }
   else{
-        var randomIndex = Math.floor(Math.random() * curveNames.length);
+    var randomIndex = pastIndex;
+    while (randomIndex == pastIndex) {
+      randomIndex = Math.floor(Math.random() * curveNames.length);
+    }
+    pastIndex = randomIndex;
     setCurve(curveNames[randomIndex]);
-
-
-
     updatePosition(0, angle);
     noScroll = true;
   }
