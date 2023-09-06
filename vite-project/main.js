@@ -12,17 +12,6 @@ camera.position.z = 40;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Create a cube with a shiny material
-const geometry = new THREE.BoxGeometry();
-const material = new THREE.MeshStandardMaterial({
-  color: 0x2194ce,   // Set the color
-  metalness: 1,      // 1 for fully metallic
-  roughness: 0.2,
-  emissive: 0x404040,
-});
-const cube = new THREE.Mesh(geometry, material);
-
-
 let loadedModel;
 const gltfLoader = new GLTFLoader();
 gltfLoader.load('enterprise.glb', (gltf) => {
@@ -38,33 +27,58 @@ gltfLoader.load('enterprise.glb', (gltf) => {
   // Add the loaded model to the scene
   scene.add(loadedModel);
   createLights();
+  updateLightPositions();
+
   animate();
 });
 
 
 // renderer.shadowMap.enabled = true;
 
-
+const lights = [];
 
 function createLights() {
   // Create a point light source
+  const center = new THREE.Vector3(0, 0, 0);
   const numLights = 24;
   const lightDistance = 40;
   for (let i = 0; i < numLights; i++) {
     const phi = Math.acos(-1 + (2 * i) / numLights); // Angle from top to bottom
     const theta = Math.sqrt(numLights * Math.PI * 2) * phi; // Angle around the sphere
 
-    const light = new THREE.PointLight(0x404040, 1000); // Increase intensity to 2
+    const light = new THREE.PointLight(0x606060, 1000);
 
     // Calculate the position using spherical coordinates
-    light.position.x = lightDistance * Math.cos(theta) * Math.sin(phi);
-    light.position.y = lightDistance * Math.sin(theta) * Math.sin(phi);
-    light.position.z = lightDistance * Math.cos(phi);
+    light.position.x = center.x + lightDistance * Math.cos(theta) * Math.sin(phi);
+    light.position.y = center.y + lightDistance * Math.sin(theta) * Math.sin(phi);
+    light.position.z = center.z + lightDistance * Math.cos(phi);
 
     scene.add(light);
 
     // Make each light point at the cube
     light.target = loadedModel;
+    lights.push(light);
+  }
+}
+
+console.log(lights);
+
+function updateLightPositions() {
+  const center = loadedModel.position.clone();
+  const numLights = 24;
+  const lightDistance = 40;
+
+  for (let i = 0; i < lights.length; i++) {
+
+    const phi = Math.acos(-1 + (2 * i) / numLights); // Angle from top to bottom
+    const theta = Math.sqrt(numLights * Math.PI * 2) * phi; // Angle around the sphere
+
+    const light = new THREE.PointLight(0x404040, 1000);
+
+    // Calculate the position using spherical coordinates
+    lights[i].position.x = center.x + lightDistance * Math.cos(theta) * Math.sin(phi);
+    lights[i].position.y = center.y + lightDistance * Math.sin(theta) * Math.sin(phi);
+    lights[i].position.z = center.z + lightDistance * Math.cos(phi);
   }
 }
 
@@ -77,8 +91,10 @@ const animate = () => {
   requestAnimationFrame(animate);
 
   // Rotate the cube
-  loadedModel.rotation.x += 0.01;
-  loadedModel.rotation.y += 0.01;
+  loadedModel.position.x += 0.02;
+  loadedModel.position.z -= 0.1;
+
+  updateLightPositions();
 
   // Render the scene
   renderer.render(scene, camera);
