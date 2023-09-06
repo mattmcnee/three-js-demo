@@ -33,7 +33,18 @@ gltfLoader.load('enterprise.glb', (gltf) => {
 });
 
 
-// renderer.shadowMap.enabled = true;
+// Adds background stars
+function addStar() {
+  const geometry = new THREE.SphereGeometry(0.5, 24, 24);
+  const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+  const star = new THREE.Mesh(geometry, material);
+
+  const [x, y, z] = [THREE.MathUtils.randFloatSpread(400), THREE.MathUtils.randFloatSpread(300), THREE.MathUtils.randFloat(-60, -160)];
+
+  star.position.set(x, y, z);
+  scene.add(star);
+}
+Array(200).fill().forEach(addStar);
 
 const lights = [];
 
@@ -73,8 +84,6 @@ function updateLightPositions() {
     const phi = Math.acos(-1 + (2 * i) / numLights); // Angle from top to bottom
     const theta = Math.sqrt(numLights * Math.PI * 2) * phi; // Angle around the sphere
 
-    const light = new THREE.PointLight(0x404040, 1000);
-
     // Calculate the position using spherical coordinates
     lights[i].position.x = center.x + lightDistance * Math.cos(theta) * Math.sin(phi);
     lights[i].position.y = center.y + lightDistance * Math.sin(theta) * Math.sin(phi);
@@ -83,16 +92,20 @@ function updateLightPositions() {
 }
 
 // Create an ambient light
-const ambientLight = new THREE.AmbientLight(0x404040); // Adjust the color as needed
+const ambientLight = new THREE.AmbientLight(0x333333); // Adjust the color as needed
 scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // Color: white, Intensity: 1
+directionalLight.position.set(1, 1, 1); // Set the direction of the light
+scene.add(directionalLight);
 
 // Function to animate the cube
 const animate = () => {
   requestAnimationFrame(animate);
 
   // Rotate the cube
-  loadedModel.position.x += 0.02;
-  loadedModel.position.z -= 0.1;
+  loadedModel.rotation.x += 0.001;
+  loadedModel.rotation.z -= 0.001;
 
   updateLightPositions();
 
