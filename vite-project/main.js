@@ -14,9 +14,9 @@ camera.position.setZ(80);
 camera.position.setY(20);
 
 // Lights
-const pointLight = new THREE.PointLight(0x000000);
-pointLight.position.set(5, 5, 5);
-const ambientLight = new THREE.AmbientLight(0xffffff);
+const pointLight = new THREE.PointLight(0xffffff);
+pointLight.position.set(0, 20, 80);
+const ambientLight = new THREE.AmbientLight(0xcccccc);
 scene.add(pointLight, ambientLight);
 
 let loadedModel;
@@ -51,6 +51,17 @@ gltfLoader.load('enterprise.glb', (gltf) => {
   scene.add(loadedModel);
   renderer.render(scene, camera);
   updatePosition(0);
+
+  pointLight.target = loadedModel;
+scene.add(pointLight);
+
+
+  // Log the material to the console
+  if (loadedModel.children.length > 0 && loadedModel.children[0].material) {
+    console.log("Material of the loaded model:", loadedModel.children[0].material);
+  } else {
+    console.error("No material found on the loaded model.");
+  }
 
   noScroll = true;
   document.addEventListener('click', () => {
