@@ -2,6 +2,7 @@ body{
   margin: 0;
   padding: 0;
     overflow-x: hidden;
+    background-color: black;
 }
 
 canvas {
@@ -23,17 +24,47 @@ canvas {
 
 main {
   width: 100vw;
+  height: calc(100vh - 140px);
+  overflow-y: scroll;
   color: white;
   z-index: 99;
-  position: absolute;
-  top: 0;
+  position: fixed;
+  top: 100px;
   left: 0;
   margin: 0px auto;
-  padding: 120px 0px;
+  padding: 20px 0px;
+/*  background-color: red;*/
   
   display: grid;
   grid-template-columns: repeat(12, 1fr);
 }
+
+main::-webkit-scrollbar {
+  width: 5px; /* Adjust the width of the scrollbar as needed */
+}
+
+main::-webkit-scrollbar-thumb {
+  background-color: #888; /* Change the color of the scrollbar thumb */
+  border-radius: 5px;
+}
+
+main::-webkit-scrollbar-thumb:hover {
+  background-color: #555; /* Change the color of the scrollbar thumb on hover */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 h1, h2, h3, blockquote {
   font-family: elevon, sans-serif;
@@ -47,13 +78,12 @@ header {
   color: white;
   padding: 10px;
   box-shadow: none;
-  position: absolute;
+  position: fixed;
   top: 20px;
   left: 20px;
-  z-index: 100;
+  z-index: 98;
   width: calc(100% - 60px);
   border-radius: 10px;
-  
 }
 
 
@@ -88,32 +118,70 @@ nav {
   transform: scale(1.04);
 }
 
-  section {
-    grid-column: 2 / 8;
-    padding: 1rem;
-    background: var(--dark-bg);
-    font-size: 1.25rem;
-    line-height: 1.5;
+
+section{
+  grid-column: 2 / 12;
+  padding: 1rem;
+  background: var(--dark-bg);
+  font-size: 1.25rem;
+  line-height: 1.5;
+
+  border-radius: 10px;
+}
+
+section:not(:last-child) {
     margin-bottom: var(--spacing);
-    border-radius: 10px;
-  }
+}
 
-  blockquote {
-    margin: 0;
-    padding: 10px;
-    grid-column: 2 / span 9;
-    margin-bottom: var(--spacing);
-        background-color: var(--dark-bg);
-        border-radius: 10px;
-  }
+section:last-child {
+    margin-bottom: 40px;
+}
 
-  blockquote p {
+.skills-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 30px;
+}
 
-    font-size: 4rem;
-    display: inline;
-    line-height: 1;
-  }
+.skills-list li {
+  display: inline-block;
+}
 
-  .left {
+.skills-list li button {
+  margin: 0 2px 6px 2px;
+  padding: 8px 12px;
+  background-color: #555;
+  color: #fff;
+  border-radius: 20px;
+  border: none;
+  transition: transform 0.3s ease-in-out;
+}
+
+.skills-list li button:hover {
+  background-color: #656565;
+  cursor: pointer;
+  transform: scale(1.03);
+}
+
+.top-section h1{
+  margin-left: 20px;
+  width: 100%;
+  text-align: center;
+}
+
+.top-section{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+img{
+  height: 200px;
+  width: 200px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+/*  .left {
     grid-column: 6 / 12;
-  }
+  }*/

@@ -55,17 +55,22 @@ gltfLoader.load('enterprise.glb', (gltf) => {
   // Add the loaded model to the scene
   scene.add(loadedModel);
   createLights();
-  setCurve("bottom1");
-  pastIndex = "bottom1";
+  setCurve("right2");
+  pastIndex = "right2";
   updatePosition(0, angle);
   noScroll = true;
-  document.addEventListener('scroll', () => {
-      if (noScroll) {
-          noScroll = false;
-          clock.start();
-          animate();
-      }
-  });
+
+
+const mainElement = document.getElementById('main');
+
+mainElement.addEventListener('scroll', () => {
+  // Your scroll event handler code goes here
+  if (noScroll) {
+    noScroll = false;
+    clock.start();
+    animate();
+  }
+});
 
   document.addEventListener('click', () => {
       if (noScroll) {
@@ -75,6 +80,23 @@ gltfLoader.load('enterprise.glb', (gltf) => {
       }
   });
 });
+
+
+
+const cubeGeometry = new THREE.BoxGeometry(10, 10, 10);
+const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+cube.position.set(60, 40, 0); // You can adjust the position as needed
+scene.add(cube);
+
+
+// Size = 120 * 80
+
+
+
+
+
+
 
 
 // Adds background stars
@@ -137,7 +159,7 @@ function updateLightPositions() {
 
 const curve = new THREE.CurvePath();
 var points;
-const curveNames = ["left1", "bottom1", "right1"]
+const curveNames = ["left1", "bottom1", "right1", "right2"]
 function setCurve(curveName) {
   // console.log("set curves");
   var romPoints = [];
@@ -145,9 +167,9 @@ function setCurve(curveName) {
   switch (curveName) {
     case "left1":
       romPoints = [
-        new THREE.Vector3(-150, 0, 0),
+        new THREE.Vector3(-100, 0, 0),
         new THREE.Vector3(0, 0, 10),
-        new THREE.Vector3(150, 0, 0),
+        new THREE.Vector3(100, 0, 0),
       ];
       angle.copy(fromLeft);
       break;
@@ -163,18 +185,27 @@ function setCurve(curveName) {
 
     case "right1":
       romPoints = [
-        new THREE.Vector3(150, 0, 0),
+        new THREE.Vector3(100, 0, 0),
         new THREE.Vector3(0, 0, 10),
-        new THREE.Vector3(-150, 0, 0),
+        new THREE.Vector3(-100, 0, 0),
+      ];
+      angle.copy(fromRight);
+      break;
+
+    case "right2":
+      romPoints = [
+        new THREE.Vector3(120, -15, 0),
+        new THREE.Vector3(0, -1, 15),
+        new THREE.Vector3(-120, 0, -10),
       ];
       angle.copy(fromRight);
       break;
 
     default:
       romPoints = [
-        new THREE.Vector3(-150, 0, 0),
+        new THREE.Vector3(-100, 0, 0),
         new THREE.Vector3(0, 0, 10),
-        new THREE.Vector3(150, 0, 0),
+        new THREE.Vector3(100, 0, 0),
       ];
       angle.copy(fromLeft);
       break;
